@@ -13,11 +13,24 @@ function factory () return function ()
   local sel = Editor:get_selection ()
   local routes = ARDOUR.RouteListPtr ()
   local single_route_selected = false -- Will use later for final popup creation.
+  local master_bus_selected = false
 
   for r in sel.tracks:routelist():iter() do
-    if r:n_outputs():n_audio() > 0 then -- Includes the Master bus.
-      routes:push_back(r)
+    if r ~= Session:master_out() and r:n_outputs():n_audio() > 0 then -- Including the Master bus is apparently not allowed in Ardour, and
+      routes:push_back(r)                                             -- attempting later to add an Aux Send to the Master bus will crash it.     
+    elseif r == Session:master_out() then
+      master_bus_selected = true
     end
+  end
+
+  if master_bus_selected then -- Include a unique popup if the Master bus is selected...
+    LuaDialog.Message(
+      "Master Bus Selected!",
+      "The Master Bus cannot have an Aux Send added to it!",
+      LuaDialog.MessageType.Warning,
+      LuaDialog.ButtonType.Close
+    ):run()
+    return
   end
 
   if routes:size() == 0 then
@@ -51,7 +64,8 @@ function factory () return function ()
   for r in Session:get_routes():iter() do
     local t = r:to_track()
 
-    if t:isnil() -- Indicates that this is a bus (-Master or otherwise).
+    if t:isnil() -- Indicates that this particular route is a *bus* (not a track).
+       and r ~= Session:master_out() -- Again, don't include the Master bus.
        and r:n_inputs():n_audio() > 0
        and not selected_names[r:name()] -- Prevents self-routing/feedback scenarios. (-Which Ardour does NOT block if you make an Aux Send via a script like this! :O)
     then                                                                                                                  -- Will probably inform Robin (x42) about this...
