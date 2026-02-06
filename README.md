@@ -15,3 +15,17 @@ Aux Send Router is a relatively simple Lua Script for the Ardour DAW (8.12+) tha
 ### Limitations:
 
 - Only works with *audio* tracks and buses... for now.
+
+--------------------------------------------------
+
+### Other notes:
+
+**Aux Send Router** is partially based on (and motivated by) the ["Send Tracks to Bus" Lua script](https://github.com/Ardour/ardour/blob/master/share/scripts/send_to_bus.lua) by Robin Gareus (x42)! *~Thanks, Robin!*
+
+And if you're interested in getting into Lua scripting for Ardour, [this trove of examples](https://github.com/Ardour/ardour/tree/master/share/scripts) is absolutely essential!
+
+--------------------------------------------------
+
+_~Enjoy!_
+
+_J. K. Lookinland_
