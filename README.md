@@ -2,7 +2,7 @@
 
 ## Basic Description
 
-Aux Send Router is a relatively simple Lua Script for the Ardour DAW (8.12+) that allows one to add Aux Sends from one or many selected tracks and buses to a bus of your choosing.
+**Aux Send Router** is a relatively simple Lua Script for the Ardour DAW (8.12+) that allows one to add Aux Sends from one or many selected tracks and buses to a bus of your choosing.
 
 ![Aux_Send_Router_Opening_Window](https://github.com/GhostsonAcid/Aux_Send_Router/blob/main/Images/Aux_Send_Router_Opening_Window.png)
 
@@ -57,9 +57,9 @@ Simply click here to download the Aux_Send_Router.lua (v1.0) file (link coming s
 
 ## Additional notes:
 
-**Aux Send Router** is partially based on (and motivated by) the ["Send Tracks to Bus" Lua script](https://github.com/Ardour/ardour/blob/master/share/scripts/send_to_bus.lua) by Robin Gareus (x42)! *~Thanks, Robin!*
+**Aux Send Router** is partially based on (and motivated by) the modest/light ["Send Tracks to Bus" Lua script](https://github.com/Ardour/ardour/blob/master/share/scripts/send_to_bus.lua) by Robin Gareus (x42) that is included with Ardour 9. *~Thanks, Robin!*
 
-And if you're interested in getting into Lua scripting for Ardour, [this trove of examples](https://github.com/Ardour/ardour/tree/master/share/scripts) is absolutely essential!
+If you're interested in getting into Lua scripting for Ardour, [this trove of examples](https://github.com/Ardour/ardour/tree/master/share/scripts) is absolutely essential(!), as well as the [Lua Bindings Class Reference](https://manual.ardour.org/lua-scripting/class_reference/) list.
 
 --------------------------------------------------
 
