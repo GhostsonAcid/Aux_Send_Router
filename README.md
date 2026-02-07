@@ -2,14 +2,15 @@
 
 ## Basic Description
 
-**Aux Send Router** is a relatively simple Lua Script for the Ardour DAW (8.12+) that allows one to add Aux Sends from one or more selected audio tracks and buses to a bus of your choosing.
+**Aux Send Router** is a Lua Script for the Ardour DAW (8.12+) that allows one to add Aux Sends to/from one or more selected audio tracks/buses to a track/bus of your choosing.
 
 ![Aux_Send_Router_Opening_Window](https://github.com/GhostsonAcid/Aux_Send_Router/blob/main/Images/Aux_Send_Router_Opening_Window.png)
 
 ### Features:
 
-- Select from all available *existing* buses in the session.
-- You can also create a *new* bus and route to the new one.
+- Route *from* the selected track(s)/bus(es) to a new or existing bus.
+- Route *to* the selected bus(es) from a new or existing track/bus.
+- Select from all available *existing* tracks and/or buses in the session.
 - Prevents self-routing/feedback situations.
 - Conveniently set the send level (in dB) you want to use for any new Aux Sends created.
 - Automatically saves the session just before Aux Send creation, just in case something goes wrong.
