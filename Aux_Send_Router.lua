@@ -57,15 +57,15 @@ function factory () return function ()
   -------------- Step 3: Create Initial Popup --------------
 
   local dialog = LuaDialog.Dialog(
-    "Aux Send Router (v1.0) - Popup 1 of 2",
+    "Aux Send Router (v1.0)",
     {
       { type = "heading", title = "What routing would you like to achieve?" },
       { type = "dropdown",
         key = "routing_direction",
         title = "Route Direction:",
         values = {
-          ["Option 1 - Route to a new/existing bus..."] = "route_to_bus",
-          ["Option 2 - Route from a new/existing track/bus..."] = "route_from_track_or_bus"
+          ["Option 1 - Route the current selection to a bus..."] = "route_to_bus",
+          ["Option 2 - Route from a track/bus to the current selection..."] = "route_from_track_or_bus"
         },
       }
     }
