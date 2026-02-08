@@ -385,6 +385,8 @@ function factory () return function ()
     midi_route_used = true
   end
 
+  midi_suffix = ""
+
   if midi_route_used then -- Create specific text used in the final popup, only for situations involving midi...
     midi_suffix =
       "\n\nNOTE: For MIDI tracks and buses, you may need to add additional audio ports to allow audio to pass through.  " ..
