@@ -306,7 +306,7 @@ function factory () return function ()
         before = before + 1
       end
 
-      r:add_aux_send(destination_route, r:main_outs()) -- Attempt* to add Aux Send (*one to the chosen bus might already exist)
+      r:add_aux_send(destination_route, r:main_outs()) -- Attempt* to add Aux Send (*one to the chosen bus might already exist).
 
       local after = 0 -- Count sends AFTER attempting to add a new Aux Send...
       while true do
@@ -344,18 +344,16 @@ function factory () return function ()
   
     for _, target in ipairs(route_array) do -- Again, should only be a *bus or buses* at this point...
 
-      local before = 0
+      local before = 0 -- Count sends before.
       while true do
         local s = source:nth_send(before)
         if s:isnil() then break end
         before = before + 1
       end
   
-      -- Attempt to add aux send FROM source TO this selected bus
       source:add_aux_send(target, source:main_outs())
   
-      -- Count sends AFTER
-      local after = 0
+      local after = 0 -- Count sends after.
       while true do
         local s = source:nth_send(after)
         if s:isnil() then break end
@@ -385,7 +383,7 @@ function factory () return function ()
     midi_route_used = true
   end
 
-  midi_suffix = ""
+  midi_suffix = "" -- Keep midi_suffix blank/empty, initially.
 
   if midi_route_used then -- Create specific text used in the final popup, only for situations involving midi...
     midi_suffix =
@@ -396,7 +394,7 @@ function factory () return function ()
 
   if single_route_selected then -- Check if single track/bus is/was selected.
 
-    if created_count == 0 then -- Check if no Aux Sends were created.
+    if created_count == 0 then -- Check if no Aux Send was created.
 
       if popup1_result["routing_direction"] == "route_from_track_or_bus" then -- Check if "Option 2" had been selected in Popup 1.
         LuaDialog.Message(
@@ -422,7 +420,7 @@ function factory () return function ()
         ):run()
       end
 
-    else
+    else -- Aux Send WAS created.
 
       if popup1_result["routing_direction"] == "route_from_track_or_bus" then
         LuaDialog.Message(
@@ -478,7 +476,7 @@ function factory () return function ()
         ):run()
       end
 
-    else -- At least one new Aux Send created.
+    else -- At least one new Aux Send was created.
 
       if popup1_result["routing_direction"] == "route_from_track_or_bus" then
         LuaDialog.Message(
