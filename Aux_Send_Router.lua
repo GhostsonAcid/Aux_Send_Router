@@ -3,7 +3,10 @@ ardour {
   name = "Aux Send Router",
   license = "GPL",
   author = "Joseph K. Lookinland",
-  description = [[Add exactly one Aux Send from all selected tracks and buses to a chosen bus, including creating a new bus.  You can also set the level for the created Aux Send(s).]]
+  description = [[       Aux Send Router allows you to add Aux Sends to/from
+  one or more selected tracks/buses to a track/bus of your
+  choosing, including a new one. You can also set the level
+  (dB) for any created Aux Send(s). (v1.0)]]
 }
 
 function factory () return function ()
@@ -14,10 +17,14 @@ function factory () return function ()
   local routes = ARDOUR.RouteListPtr ()
   local single_route_selected = false -- Will use later for final popup creation.
   local master_bus_selected = false
+  local midi_route_used = false -- Used for special reminder text in final popup.
 
   for r in sel.tracks:routelist():iter() do
-    if r ~= Session:master_out() and r:n_outputs():n_audio() > 0 then -- Including the Master bus is apparently not allowed in Ardour, and
-      routes:push_back(r)                                             -- attempting later to add an Aux Send to the Master bus will crash it.     
+    if r ~= Session:master_out() and (r:n_outputs():n_audio() > 0 or r:n_outputs():n_midi() > 0) then -- Including the Master bus is apparently not allowed in Ardour, and
+      routes:push_back(r)                                                                             -- attempting later to add an Aux Send to the Master bus will crash it.     
+      if r:n_outputs():n_midi() > 0 then
+        midi_route_used = true
+      end
     elseif r == Session:master_out() then
       master_bus_selected = true
     end
@@ -62,9 +69,9 @@ function factory () return function ()
       { type = "heading", title = "What routing would you like to achieve?" },
       { type = "dropdown",
         key = "routing_direction",
-        title = "Route Direction:",
+        title = "Routing Options",
         values = {
-          ["Option 1 - Route the current selection to a bus..."] = "route_to_bus",
+          ["Option 1 - Route the current selection to a bus...                "] = "route_to_bus", -- Spaces added to make dd-menu wider to accommodate Option 2.
           ["Option 2 - Route from a track/bus to the current selection..."] = "route_from_track_or_bus"
         },
       }
@@ -100,12 +107,12 @@ function factory () return function ()
   local route_values = {}
   local route_map = {}
 
-  for r in Session:get_routes():iter() do
+  for r in Session:get_routes():iter() do -- Do for either routing option chosen...
     local t = r:to_track()
 
     if t:isnil() -- Indicates that this particular route is a *bus* (not a track); collect buses for *either* selected option...
       and r ~= Session:master_out() -- Again, don't include the Master bus.
-      and r:n_inputs():n_audio() > 0
+      and (r:n_outputs():n_audio() > 0 or r:n_outputs():n_midi() > 0) -- Includes midi buses.
       and not selected_names[r:name()] -- Prevents self-routing/feedback scenarios. (-Which Ardour does NOT block if you make an Aux Send via a script like this! :O)
     then                                                                                                               -- Will probably inform Robin (x42) about this...
       local name = r:name()
@@ -114,8 +121,8 @@ function factory () return function ()
     end
 
     if popup1_result["routing_direction"] == "route_from_track_or_bus" then -- Add tracks as well, but ONLY for this option...
-      if not t:isnil() -- Indicates that this particular route is a *track*.
-      and r:n_inputs():n_audio() > 0
+      if not t:isnil() -- Is a *track*.
+      and (r:n_outputs():n_audio() > 0 or r:n_outputs():n_midi() > 0) -- Includes midi tracks.
       and not selected_names[r:name()] -- Prevents self-routing/feedback scenarios.
       then
         local name = r:name()
@@ -126,10 +133,12 @@ function factory () return function ()
   end
 
   -- Add options for creating a new track and/or bus:
-  route_values["--- Create New Bus ---"] = "new_bus" -- Due to the inclusion of "---" at the beginning, this will be shown as the topmost/'default' setting (~99% of the time).
+  route_values["--- Create New Audio Bus ---"] = "new_audio_bus" -- Due to the inclusion of "---" at the beginning, this will be shown as the topmost/'default' setting (~99% of the time).
+  route_values["--- Create New Midi Bus ---"] = "new_midi_bus"
 
   if popup1_result["routing_direction"] == "route_from_track_or_bus" then
-    route_values["--- Create New Track ---"] = "new_track"
+    route_values["--- Create New Audio Track ---"] = "new_audio_track"
+    route_values["--- Create New Midi Track ---"] = "new_midi_track"
   end
 
   -------------- Step 6. Create Secondary Popup, as Required --------------
@@ -141,10 +150,10 @@ function factory () return function ()
     local dialog = LuaDialog.Dialog(
       "Aux Send Router (v1.0)",
       {
-        { type = "heading", title = "Please select the bus you want to route to:" },
+        { type = "heading", title = "Please choose the bus you want to route to:" },
         { type = "dropdown",
           key = "route_choice",
-          title = "Destination Route",
+          title = "Available Routes",
           values = route_values
         },
         { type = "fader",
@@ -162,10 +171,10 @@ function factory () return function ()
     local dialog = LuaDialog.Dialog(
       "Aux Send Router (v1.0)",
       {
-        { type = "heading", title = "Please select the track or bus you want to route from:" },
+        { type = "heading", title = "Please choose the track or bus you want to route from:" },
         { type = "dropdown",
           key = "route_choice",
-          title = "Destination Route",
+          title = "Available Routes",
           values = route_values
         },
         { type = "fader",
@@ -190,7 +199,7 @@ function factory () return function ()
 
   local destination_route
 
-  if popup2_result["route_choice"] == "new_bus" then -- Create a new bus, if required; following some of Robin's logic here...
+  if popup2_result["route_choice"] == "new_audio_bus" then -- Create a new audio bus, if required (~following some of Robin's logic here)...
 
     local chn = 2
     local mst = Session:master_out()
@@ -199,7 +208,7 @@ function factory () return function ()
     end
     if chn == 0 then chn = 2 end
 
-    local create_bus = Session:new_audio_route(
+    local create_audio_bus = Session:new_audio_route(
       chn, chn,
       ARDOUR.RouteGroup(),
       1, "",
@@ -207,9 +216,9 @@ function factory () return function ()
       ARDOUR.PresentationInfo.max_order
     )
 
-    destination_route = create_bus:front()
+    destination_route = create_audio_bus:front()
 
-  elseif popup2_result["route_choice"] == "new_track" then -- Create a new track, if required...
+  elseif popup2_result["route_choice"] == "new_audio_track" then -- Create a new audio track, if required...
 
     local chn = 2
     local mst = Session:master_out()
@@ -218,7 +227,7 @@ function factory () return function ()
     end
     if chn == 0 then chn = 2 end
 
-    local create_track = Session:new_audio_track(
+    local create_audio_track = Session:new_audio_track(
       chn, chn,
       ARDOUR.RouteGroup(),
       1, "",
@@ -226,7 +235,41 @@ function factory () return function ()
       ARDOUR.TrackMode.Normal
     )
 
-    destination_route = create_track:front()
+    destination_route = create_audio_track:front()
+
+  elseif popup2_result["route_choice"] == "new_midi_bus" then -- Create a new midi bus, if required...
+
+    local create_midi_bus = Session:new_midi_route(
+      ARDOUR.RouteGroup(),
+      1,
+      "",
+      false,
+      ARDOUR.PluginInfo(),
+      ARDOUR.PresetRecord(),
+      ARDOUR.PresentationInfo.Flag.MidiBus,
+      ARDOUR.PresentationInfo.max_order
+    )
+    
+    destination_route = create_midi_bus:front()
+
+  elseif popup2_result["route_choice"] == "new_midi_track" then -- Create a new midi track, if required... 
+  
+    local create_midi_track = Session:new_midi_track(
+      ARDOUR.ChanCount(ARDOUR.DataType.midi(), 1),
+      ARDOUR.ChanCount(ARDOUR.DataType.midi(), 1),
+      false,
+      ARDOUR.PluginInfo(),
+      ARDOUR.PresetRecord(),
+      ARDOUR.RouteGroup(),
+      1,
+      "",
+      ARDOUR.PresentationInfo.max_order,
+      ARDOUR.TrackMode.Normal,
+      false,
+      false
+    )
+    
+    destination_route = create_midi_track:front()
 
   else
     destination_route = route_map[popup2_result["route_choice"]] -- Establish the specific, already-existing, chosen track or bus to use.
@@ -242,7 +285,7 @@ function factory () return function ()
     return
   end
 
-  -------------- Step 9. Convert Fader dB to 0-to-1 Value --------------
+  -------------- Step 9. Convert Aux Send 'Fader' dB to 0-to-1 Value --------------
 
   local gain_db = popup2_result["gain"]
   local linear_gain = 10 ^ (gain_db / 20)
@@ -334,6 +377,21 @@ function factory () return function ()
 
   -------------- Step 11. Present Final, Conditional Popup --------------
 
+  if popup2_result["route_choice"] == "new_midi_track" or popup2_result["route_choice"] == "new_midi_bus" then
+    midi_route_used = true
+  end
+
+  if destination_route:n_outputs():n_midi() > 0 then
+    midi_route_used = true
+  end
+
+  if midi_route_used then -- Create specific text used in the final popup, only for situations involving midi...
+    midi_suffix =
+      "\n\nNOTE: For MIDI tracks and buses, you may need to add additional audio ports to allow audio to pass through.  " ..
+      "To do this, you can Left-click on the \"INPUT\" portion of a MIDI track or bus (near the top of its mixer strip), " ..
+      "and use the \"Add audio port\" function."
+  end
+
   if single_route_selected then -- Check if single track/bus is/was selected.
 
     if created_count == 0 then -- Check if no Aux Sends were created.
@@ -342,8 +400,9 @@ function factory () return function ()
         LuaDialog.Message(
           "No Aux Send is needed!",
           string.format(
-            "The selected bus is already receiving an Aux Send from %s!\n",
-            destination_route:name()
+            "The selected bus is already receiving an Aux Send from %s!\n%s",
+            destination_route:name(),
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -352,8 +411,9 @@ function factory () return function ()
         LuaDialog.Message(
           "No Aux Send is needed!",
           string.format(
-            "The selected route already has an Aux Send to %s!\n",
-            destination_route:name()
+            "The selected route already has an Aux Send to %s!\n%s",
+            destination_route:name(),
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -366,8 +426,9 @@ function factory () return function ()
         LuaDialog.Message(
           "Success!",
           string.format(
-            "The selected bus is now receiving an Aux Send from %s!\n",
-            destination_route:name()
+            "The selected bus is now receiving an Aux Send from %s!\n%s",
+            destination_route:name(),
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -376,8 +437,9 @@ function factory () return function ()
         LuaDialog.Message(
           "Success!",
           string.format(
-            "The selected route now has an Aux Send to %s!\n",
-            destination_route:name()
+            "The selected route now has an Aux Send to %s!\n%s",
+            destination_route:name(),
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -394,8 +456,9 @@ function factory () return function ()
         LuaDialog.Message(
           "No Aux Sends are needed!",
           string.format(
-            "All of the selected buses are already receiving an Aux Send from %s!\n",
-            destination_route:name()
+            "All of the selected buses are already receiving an Aux Send from %s!\n%s",
+            destination_route:name(),
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -404,8 +467,9 @@ function factory () return function ()
         LuaDialog.Message(
           "No Aux Sends are needed!",
           string.format(
-            "All of the selected routes already have an Aux Send to %s!\n",
-            destination_route:name()
+            "All of the selected routes already have an Aux Send to %s!\n%s",
+            destination_route:name(),
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -418,10 +482,11 @@ function factory () return function ()
         LuaDialog.Message(
           "Success!",
           string.format(
-            "All of the selected buses are now receiving an Aux Send from %s!\n\n\nNew Aux Send(s) created: %d\n\nAux Send(s) that already existed: %d\n",
+            "All of the selected buses are now receiving an Aux Send from %s!\n\n\n• New Aux Send(s) created: %d\n\n• Aux Send(s) that already existed: %d\n%s",
             destination_route:name(),
             created_count,
-            existing_count
+            existing_count,
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
@@ -430,10 +495,11 @@ function factory () return function ()
         LuaDialog.Message(
           "Success!",
           string.format(
-            "All of the selected tracks/buses now have an Aux Send to %s!\n\n\nNew Aux Send(s) created: %d\n\nAux Send(s) that already existed: %d\n",
+            "All of the selected tracks/buses now have an Aux Send to %s!\n\n\n• New Aux Send(s) created: %d\n\n• Aux Send(s) that already existed: %d\n%s",
             destination_route:name(),
             created_count,
-            existing_count
+            existing_count,
+            midi_suffix
           ),
           LuaDialog.MessageType.Info,
           LuaDialog.ButtonType.Close
