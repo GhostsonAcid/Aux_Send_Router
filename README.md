@@ -2,22 +2,34 @@
 
 ## Basic Description
 
-**Aux Send Router** is a Lua Script for the Ardour DAW (8.12+) that allows one to add Aux Sends to/from one or more selected audio tracks/buses to a track/bus of your choosing.
+**Aux Send Router** is a Lua Script for the Ardour DAW (8.12+) that allows one to add Aux Sends to/from one or more selected tracks/buses to a track/bus of your choosing, including a new one.
 
 ![Aux_Send_Router_Opening_Window](https://github.com/GhostsonAcid/Aux_Send_Router/blob/main/Images/Aux_Send_Router_Opening_Window.png)
 
 ### Features:
 
+- Supports audio *and* midi tracks/buses.
+- Select from all available *existing* tracks and/or buses in the session.
 - Route *from* the selected track(s)/bus(es) to a new or existing bus.
 - Route *to* the selected bus(es) from a new or existing track/bus.
-- Select from all available *existing* tracks and/or buses in the session.
 - Prevents self-routing/feedback situations.
 - Conveniently set the send level (in dB) you want to use for any new Aux Sends created.
 - Automatically saves the session just before Aux Send creation, just in case something goes wrong.
 
-### Limitations:
+--------------------------------------------------
 
-- Only works with *audio* tracks and buses... for now.
+## Examples:
+
+### "Option 1 - Route the current selection to a bus...":
+
+![Aux_Send_Router_Opening_Window](https://github.com/GhostsonAcid/Aux_Send_Router/blob/main/Images/Aux_Send_Router_Routing_Example_1_(Option_1).gif)
+
+### "Option 2 - Route from a track/bus to the current selection...":
+
+![Aux_Send_Router_Opening_Window](https://github.com/GhostsonAcid/Aux_Send_Router/blob/main/Images/Aux_Send_Router_Routing_Example_2_(Option_2).gif)
+
+
+
 
 --------------------------------------------------
 
