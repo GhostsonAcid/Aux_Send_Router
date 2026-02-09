@@ -28,14 +28,11 @@
 
 ![Aux_Send_Router_Opening_Window](https://github.com/GhostsonAcid/Aux_Send_Router/blob/main/Images/Aux_Send_Router_Routing_Example_2_(Option_2).gif)
 
-
-
-
 --------------------------------------------------
 
 ## Installation
 
-Simply click here to download the Aux_Send_Router.lua (v1.0) file (link coming soon), and then do the following based on your OS:
+Simply [click here to download the Aux_Send_Router.lua (v1.0) file](https://github.com/GhostsonAcid/Aux_Send_Router/releases/download/v1.0/Aux_Send_Router.lua), and then do the following based on your OS:
 
 ### GNU/Linux:
 
